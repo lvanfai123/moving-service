@@ -268,3 +268,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 Made with ❤️ by the Moving Service Platform Team
+
+## Deployment
+
+[![Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/lvanfai123/moving-service)
+
+### Deploy Status
+This project is automatically deployed to Vercel when changes are pushed to the main branch.
