@@ -154,20 +154,27 @@ export default function PromisesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-green-700">我們提供完善的退款保障政策，確保您的權益得到充分保護。</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">24小時</div>
-                <div className="text-sm text-green-700">搬運前取消可全額退款</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">1-3天</div>
-                <div className="text-sm text-green-700">退款申請審核時間</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">5-7天</div>
-                <div className="text-sm text-green-700">退款到賬時間</div>
-              </div>
-            </div>
+            <ul className="list-disc pl-5 space-y-2">
+              <li className="text-green-700">全額退回按金</li>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>服務開始前5個工作天取消：100%退款</li>
+                <li>因天氣等不可抗力因素取消</li>
+                <li>搬運公司無故取消服務</li>
+              </ul>
+              <li className="text-green-700">部分退回按金</li>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>服務開始前4個工作天內取消：扣除 $150 手續費</li>
+                <li>服務開始前3個工作天內取消：扣除 50% 按金</li>
+              </ul>
+              <li className="text-green-700">不接受退回按金情況</li>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>服務開始前1個工作天內取消</li>
+                <li>服務已經開始後取消</li>
+                <li>客戶提供錯誤或不完整的搬運信息</li>
+                <li>客戶在約定時間不在現場</li>
+                <li>因客戶個人原因導致無法完成搬運</li>
+              </ul>
+            </ul>
             <div className="text-center">
               <Button asChild variant="outline" className="border-green-600 text-green-600 hover:bg-green-100">
                 <Link href="/refund-terms">查看完整退款條款</Link>
