@@ -1,0 +1,53 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 搬屋師 Logo - 基於新設計 -->
+  
+  <!-- 外框菱形 -->
+  <path d="M60 10 L100 35 L100 85 L60 110 L20 85 L20 35 Z" 
+        stroke="#1B5E20" 
+        stroke-width="4" 
+        fill="none"/>
+  
+  <!-- 內部菱形背景 -->
+  <path d="M60 15 L95 37 L95 83 L60 105 L25 83 L25 37 Z" 
+        fill="#FFFFFF"/>
+  
+  <!-- 強壯人物剪影 -->
+  <g transform="translate(60, 60)">
+    <!-- 頭部 -->
+    <ellipse cx="0" cy="-25" rx="8" ry="10" fill="#1B5E20"/>
+    
+    <!-- 身體 -->
+    <ellipse cx="0" cy="-5" rx="15" ry="20" fill="#1B5E20"/>
+    
+    <!-- 手臂 -->
+    <ellipse cx="-20" cy="-10" rx="8" ry="15" fill="#1B5E20"/>
+    <ellipse cx="20" cy="-10" rx="8" ry="15" fill="#1B5E20"/>
+    
+    <!-- 腹肌線條 -->
+    <rect x="-3" y="-15" width="6" height="4" rx="2" fill="#FFFFFF"/>
+    <rect x="-3" y="-8" width="6" height="4" rx="2" fill="#FFFFFF"/>
+    <rect x="-3" y="-1" width="6" height="4" rx="2" fill="#FFFFFF"/>
+  </g>
+  
+  <!-- 五顆星星 -->
+  <g fill="#1B5E20">
+    <!-- 中央星星 -->
+    <polygon points="60,25 62,31 68,31 63,35 65,41 60,37 55,41 57,35 52,31 58,31" />
+    
+    <!-- 左側星星 -->
+    <polygon points="40,30 41.5,34 46,34 42.5,37 44,41 40,38 36,41 37.5,37 34,34 38.5,34" />
+    <polygon points="25,35 26.5,39 31,39 27.5,42 29,46 25,43 21,46 22.5,42 19,39 23.5,39" />
+    
+    <!-- 右側星星 -->
+    <polygon points="80,30 81.5,34 86,34 82.5,37 84,41 80,38 76,41 77.5,37 74,34 78.5,34" />
+    <polygon points="95,35 96.5,39 101,39 97.5,42 99,46 95,43 91,46 92.5,42 89,39 93.5,39" />
+  </g>
+  
+  <!-- 搬屋師文字 -->
+  <text x="60" y="100" 
+        font-family="Arial, sans-serif" 
+        font-size="14" 
+        font-weight="bold" 
+        text-anchor="middle" 
+        fill="#1B5E20">搬屋師</text>
+</svg>
