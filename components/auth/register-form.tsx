@@ -59,7 +59,7 @@ export function RegisterForm({ onSuccess, prefillPhone = "", referralCode, refer
     }
 
     try {
-      // 使用Twilio發送驗證���
+      // 使用Twilio發送驗證碼
       const formattedPhone = formatPhoneNumber(phone)
       const result = await sendVerificationCode(formattedPhone)
 
@@ -117,35 +117,44 @@ export function RegisterForm({ onSuccess, prefillPhone = "", referralCode, refer
         return
       }
 
-      // 創建新用戶
-      const formData = new FormData()
-      formData.append("name", name)
-      formData.append("email", email)
-      formData.append("phone", formattedPhone)
-      formData.append("whatsapp", whatsapp)
+      // 使用新的 API 路由創建用戶
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone: formattedPhone,
+          whatsapp,
+          referralCode: inputReferralCode,
+          referrerId
+        })
+      })
 
-      const registerResult = await registerUser(formData)
+      const result = await response.json()
 
-      if (registerResult.success) {
-        // 如果有推薦碼，創建推薦關係
-        if (inputReferralCode && referrerId) {
-          // 這裡可以添加創建推薦關係的代碼
-          toast({
-            title: "註冊成功",
-            description: "歡迎加入！推薦獎勵將在您完成首次訂單後發放。",
-          })
-        } else {
-          toast({
-            title: "註冊成功",
-            description: "歡迎加入！",
-          })
-        }
-
-        if (onSuccess) onSuccess()
-        router.push("/dashboard")
-      } else {
-        throw new Error(registerResult.error || "註冊失敗")
+      if (!response.ok) {
+        throw new Error(result.error || "註冊失敗")
       }
+
+      // 如果有推薦碼，創建推薦關係
+      if (inputReferralCode && referrerId) {
+        // 這裡可以添加創建推薦關係的代碼
+        toast({
+          title: "註冊成功",
+          description: "歡迎加入！推薦獎勵將在您完成首次訂單後發放。",
+        })
+      } else {
+        toast({
+          title: "註冊成功",
+          description: "歡迎加入！",
+        })
+      }
+
+      if (onSuccess) onSuccess()
+      router.push("/dashboard")
     } catch (error) {
       toast({
         title: "註冊失敗",

@@ -61,7 +61,7 @@ export default function QuoteSubmitPage({ params }: { params: { id: string } }) 
   }
 
   // 提交報價
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // 檢查是否至少選擇了一個可用時間
@@ -76,15 +76,62 @@ export default function QuoteSubmitPage({ params }: { params: { id: string } }) 
 
     setIsSubmitting(true)
 
-    // 模擬提交報價
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      // 準備提交資料
+      const selectedServices = additionalServices
+        .filter(service => service.selected)
+        .reduce((acc, service) => {
+          acc[service.name] = service.fee
+          return acc
+        }, {} as Record<string, number>)
+
+      const selectedTimes = availableTimes
+        .filter(time => time.selected)
+        .map(time => ({
+          date: time.date,
+          time: time.time
+        }))
+
+      const submitData = {
+        quoteRequestId: quoteId,
+        basicFee: basicFee,
+        additionalServices: selectedServices,
+        discount: discount,
+        totalAmount: calculateTotal(),
+        availableTimes: selectedTimes,
+        remarks: remarks
+      }
+
+      // 提交到 API
+      const response = await fetch('/api/partner/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || '提交失敗')
+      }
+
       toast({
         title: "報價已提交",
         description: "您的報價已成功提交，客戶將收到通知",
       })
+      
       router.push("/partner/dashboard")
-    }, 1500)
+    } catch (error) {
+      toast({
+        title: "提交失敗",
+        description: error instanceof Error ? error.message : "請稍後再試",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // 模擬報價數據 - 在實際應用中，這些數據應該從API獲取

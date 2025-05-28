@@ -74,12 +74,58 @@ export function SharedQuoteForm({
     e.preventDefault()
     setIsLoading(true)
 
-    // 在實際應用中，這裡會處理表單數據
-    // 然後重定向到提交頁面，並傳遞電話號碼
-    setTimeout(() => {
+    try {
+      // 收集表單資料
+      const formElement = e.target as HTMLFormElement
+      const formData = new FormData(formElement)
+      
+      const requestData = {
+        fullname: formData.get('fullname'),
+        phone: phone,
+        email: formData.get('email'),
+        whatsapp: formData.get('whatsapp') || phone,
+        fromAddress: fromAddress,
+        toAddress: toAddress,
+        moveDate: formData.get('move-date'),
+        moveTime: formData.get('move-time'),
+        items: items,
+        packagingServices: packagingServices,
+        additionalServices: additionalServices,
+        specialRequirements: formData.get('special-requirements'),
+        photos: [] // TODO: 實現照片上傳
+      }
+
+      // 提交到 API
+      const response = await fetch('/api/quote-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || '提交失敗')
+      }
+
+      toast({
+        title: "提交成功",
+        description: "您的搬運需求已成功提交，我們將盡快為您安排報價。",
+      })
+
+      // 重定向到提交成功頁面
+      router.push(`${redirectPath}?phone=${encodeURIComponent(phone)}&quoteId=${result.quoteRequestId}`)
+    } catch (error) {
+      toast({
+        title: "提交失敗",
+        description: error instanceof Error ? error.message : "請稍後再試",
+        variant: "destructive"
+      })
+    } finally {
       setIsLoading(false)
-      router.push(`${redirectPath}?phone=${encodeURIComponent(phone)}`)
-    }, 1000)
+    }
   }
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
