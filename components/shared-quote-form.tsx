@@ -41,6 +41,8 @@ export function SharedQuoteForm({
   const [phone, setPhone] = useState("")
   const [hasStairs, setHasStairs] = useState("no")
   const [itemPhotos, setItemPhotos] = useState<File[]>([])
+  const [uploadedPhotos, setUploadedPhotos] = useState<{url: string, fileName: string}[]>([])
+  const [isUploading, setIsUploading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showStairsCount, setShowStairsCount] = useState(false)
   const [items, setItems] = useState<QuoteRequestItem[]>([])
@@ -70,8 +72,96 @@ export function SharedQuoteForm({
     setShowStairsCount(hasStairs === "yes")
   }, [hasStairs])
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newPhotos = Array.from(e.target.files)
+      
+      // 檢查總照片數量
+      if (itemPhotos.length + uploadedPhotos.length + newPhotos.length > 10) {
+        toast({
+          title: "照片數量超過限制",
+          description: "最多只能上傳10張照片",
+          variant: "destructive"
+        })
+        return
+      }
+      
+      setItemPhotos((prev) => [...prev, ...newPhotos])
+      
+      // 立即開始上傳
+      setIsUploading(true)
+      
+      for (const photo of newPhotos) {
+        try {
+          const formData = new FormData()
+          formData.append('file', photo)
+          
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+          
+          const result = await response.json()
+          
+          if (response.ok) {
+            setUploadedPhotos(prev => [...prev, { url: result.url, fileName: result.fileName }])
+            // 從待上傳列表中移除已上傳的照片
+            setItemPhotos(prev => prev.filter(p => p !== photo))
+          } else {
+            throw new Error(result.error || '上傳失敗')
+          }
+        } catch (error) {
+          toast({
+            title: "照片上傳失敗",
+            description: error instanceof Error ? error.message : "請稍後再試",
+            variant: "destructive"
+          })
+        }
+      }
+      
+      setIsUploading(false)
+    }
+  }
+
+  const removePhoto = async (index: number, isUploaded: boolean = false) => {
+    if (isUploaded && uploadedPhotos[index]) {
+      // 如果是已上傳的照片，需要從服務器刪除
+      try {
+        const response = await fetch(`/api/upload?fileName=${uploadedPhotos[index].fileName}`, {
+          method: 'DELETE'
+        })
+        
+        if (!response.ok) {
+          throw new Error('刪除失敗')
+        }
+        
+        setUploadedPhotos((prev) => prev.filter((_, i) => i !== index))
+      } catch (error) {
+        toast({
+          title: "刪除失敗",
+          description: "無法刪除照片，請稍後再試",
+          variant: "destructive"
+        })
+      }
+    } else {
+      // 如果是未上傳的照片，直接從列表中移除
+      setItemPhotos((prev) => prev.filter((_, i) => i !== index))
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 確保所有照片都已上傳
+    if (itemPhotos.length > 0 && !isUploading) {
+      toast({
+        title: "請等待照片上傳完成",
+        description: "照片正在上傳中，請稍候",
+        variant: "destructive"
+      })
+      return
+    }
+    
     setIsLoading(true)
 
     try {
@@ -92,7 +182,7 @@ export function SharedQuoteForm({
         packagingServices: packagingServices,
         additionalServices: additionalServices,
         specialRequirements: formData.get('special-requirements'),
-        photos: [] // TODO: 實現照片上傳
+        photos: uploadedPhotos.map(p => p.url) // 使用已上傳的照片URL
       }
 
       // 提交到 API
@@ -126,17 +216,6 @@ export function SharedQuoteForm({
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newPhotos = Array.from(e.target.files)
-      setItemPhotos((prev) => [...prev, ...newPhotos])
-    }
-  }
-
-  const removePhoto = (index: number) => {
-    setItemPhotos((prev) => prev.filter((_, i) => i !== index))
   }
 
   // 直接處理原生radio按鈕的變更
@@ -232,28 +311,65 @@ export function SharedQuoteForm({
             </div>
 
             <div className="flex flex-wrap gap-4">
-              {itemPhotos.map((photo, index) => (
-                <div key={index} className="relative">
+              {/* 顯示已上傳的照片 */}
+              {uploadedPhotos.map((photo, index) => (
+                <div key={`uploaded-${index}`} className="relative">
                   <img
-                    src={URL.createObjectURL(photo) || "/placeholder.svg"}
+                    src={photo.url}
                     alt={`物品照片 ${index + 1}`}
                     className="h-24 w-24 object-cover rounded-md"
                   />
                   <button
                     type="button"
-                    onClick={() => removePhoto(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center"
+                    onClick={() => removePhoto(index, true)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                    disabled={isUploading}
                   >
                     ×
                   </button>
                 </div>
               ))}
-              <label className="h-24 w-24 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Upload className="h-6 w-6 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-2">上傳照片</span>
-                <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
-              </label>
+              
+              {/* 顯示待上傳的照片 */}
+              {itemPhotos.map((photo, index) => (
+                <div key={`pending-${index}`} className="relative">
+                  <img
+                    src={URL.createObjectURL(photo)}
+                    alt={`待上傳照片 ${index + 1}`}
+                    className="h-24 w-24 object-cover rounded-md opacity-50"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                      上傳中...
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* 上傳按鈕 */}
+              {(itemPhotos.length + uploadedPhotos.length < 10) && (
+                <label className="h-24 w-24 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <Upload className="h-6 w-6 text-gray-400" />
+                  <span className="text-xs text-gray-500 mt-2">上傳照片</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple 
+                    className="hidden" 
+                    onChange={handlePhotoUpload}
+                    disabled={isUploading}
+                  />
+                </label>
+              )}
             </div>
+            
+            {isUploading && (
+              <p className="text-sm text-blue-600 mt-2">正在上傳照片，請稍候...</p>
+            )}
+            
+            <p className="text-xs text-gray-500 mt-2">
+              已上傳 {uploadedPhotos.length} 張照片，最多可上傳 10 張
+            </p>
           </div>
         </div>
       </div>
@@ -267,8 +383,8 @@ export function SharedQuoteForm({
         />
       </div>
 
-      <Button type="submit" className="w-full bg-primary hover:bg-primary-600" disabled={isLoading}>
-        {isLoading ? "處理中..." : submitButtonText}
+      <Button type="submit" className="w-full bg-primary hover:bg-primary-600" disabled={isLoading || isUploading}>
+        {isLoading ? "處理中..." : isUploading ? "照片上傳中..." : submitButtonText}
       </Button>
     </form>
   )
